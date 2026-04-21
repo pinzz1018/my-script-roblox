@@ -1,0 +1,245 @@
+--[[
+    script by pinzz | antiafk V8 (ULTIMATE FIXED) 😈
+    - Note: masih v3 jadi banyak bug
+    - Key: thekingpinzz
+    - Fitur: Anti-AFK, Anti-Lag, Anti-Ban, Spin, TP, Spectate, AIMLOCK, FOV, ESP
+]]
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "script by pinzz | V8 😈",
+   LoadingTitle = "King's Security V8...",
+   LoadingSubtitle = "by Alfin's Assistant X",
+   ConfigurationSaving = { Enabled = false },
+   KeySystem = true,
+   KeySettings = {
+      Title = "Strict Security Verification",
+      Subtitle = "Authentication Required",
+      Note = "masih v3 jadi banyak bug", 
+      FileName = "PinzzV8",
+      SaveKey = false, 
+      GrabKeyFromSite = false,
+      Key = {"thekingpinzz"} 
+   }
+})
+
+-- [ SERVICES & VARIABLES ]
+local player = game.Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local RS = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+local VirtualUser = game:GetService("VirtualUser")
+
+local Settings = {
+    -- Aimlock & ESP
+    Aimlock = false,
+    ESP = false,
+    FOV = 100,
+    TargetPart = "Head", -- Default
+    -- Main Fitur
+    AntiAFK = false,
+    AutoJump = false,
+    AutoReconnect = false,
+    JumpInterval = 30,
+    AntiLag = false,
+    AntiBan = false,
+    SpinChar = false,
+    SpinSpeed = 50,
+    TargetTeleport = "",
+    TargetSpectate = ""
+}
+
+-- [ FOV CIRCLE ]
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Visible = false
+FOVCircle.Color = Color3.fromRGB(255, 0, 0) -- Merah
+FOVCircle.Thickness = 1.5
+FOVCircle.Transparency = 1
+FOVCircle.Filled = false
+FOVCircle.Radius = Settings.FOV
+
+-- [ FUNCTIONS ]
+local function FindPlayer(Name)
+    if Name == "" then return nil end
+    Name = string.lower(Name)
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= player and (string.find(string.lower(v.Name), Name) or string.find(string.lower(v.DisplayName), Name)) then
+            return v
+        end
+    end
+    return nil
+end
+
+local function IsVisible(Part)
+    local RaycastParam = RaycastParams.new()
+    RaycastParam.FilterType = Enum.RaycastFilterType.Exclude
+    RaycastParam.FilterDescendantsInstances = {player.Character, Camera}
+    local result = workspace:Raycast(Camera.CFrame.Position, (Part.Position - Camera.CFrame.Position).Unit * 1000, RaycastParam)
+    return result == nil or result.Instance:IsDescendantOf(Part.Parent)
+end
+
+local function GetClosestPlayer()
+    local Target = nil
+    local Dist = Settings.FOV
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= player and v.Character and v.Character:FindFirstChild(Settings.TargetPart) then
+            local hum = v.Character:FindFirstChildOfClass("Humanoid")
+            if hum and hum.Health > 0 then
+                local ScreenPos, OnScreen = Camera:WorldToViewportPoint(v.Character[Settings.TargetPart].Position)
+                if OnScreen then
+                    local MouseDist = (Vector2.new(ScreenPos.X, ScreenPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                    if MouseDist < Dist then
+                        if IsVisible(v.Character[Settings.TargetPart]) then
+                            Dist = MouseDist
+                            Target = v
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return Target
+end
+
+-- [ TAB AIMLOCK & ESP ]
+local AimTab = Window:CreateTab("Aimlock 🎯", 4483362458)
+
+AimTab:CreateToggle({
+   Name = "Enable Aimlock", 
+   CurrentValue = false, 
+   Callback = function(V) 
+      Settings.Aimlock = V 
+      FOVCircle.Visible = V 
+   end
+})
+
+AimTab:CreateToggle({
+   Name = "Enable ESP (Wallhack)", 
+   CurrentValue = false, 
+   Callback = function(V) 
+      Settings.ESP = V 
+   end
+})
+
+AimTab:CreateSlider({
+   Name = "FOV Radius", 
+   Range = {50, 500}, 
+   Increment = 10, 
+   CurrentValue = 100, 
+   Callback = function(V) 
+      Settings.FOV = V 
+      FOVCircle.Radius = V 
+   end
+})
+
+AimTab:CreateDropdown({
+   Name = "Target Aim", 
+   Options = {"Kepala", "Badan"}, 
+   CurrentOption = "Kepala", 
+   Callback = function(V) 
+      if V == "Kepala" then
+          Settings.TargetPart = "Head"
+      elseif V == "Badan" then
+          Settings.TargetPart = "HumanoidRootPart"
+      end
+   end
+})
+
+-- [ TAB MAIN ]
+local MainTab = Window:CreateTab("Main 🛡️", 4483362458)
+MainTab:CreateToggle({Name = "Enable Anti-AFK", CurrentValue = false, Callback = function(V) Settings.AntiAFK = V end})
+MainTab:CreateToggle({Name = "Anti-AFK Version Jump", CurrentValue = false, Callback = function(V) Settings.AutoJump = V end})
+MainTab:CreateToggle({Name = "Auto Reconnect", CurrentValue = false, Callback = function(V) Settings.AutoReconnect = V end})
+
+-- [ TAB TELEPORT ]
+local TPTab = Window:CreateTab("Teleport 🚀", 4483362458)
+TPTab:CreateInput({Name = "Input Nama", PlaceholderText = "...", Callback = function(V) Settings.TargetTeleport = V end})
+TPTab:CreateButton({Name = "Teleport Sekarang", Callback = function()
+      local target = FindPlayer(Settings.TargetTeleport)
+      if target and target.Character then player.Character:PivotTo(target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)) end
+end})
+
+-- [ TAB SPECTATE ]
+local SpecTab = Window:CreateTab("Spectate 👁️", 4483362458)
+SpecTab:CreateInput({Name = "Input Nama", PlaceholderText = "...", Callback = function(V) Settings.TargetSpectate = V end})
+SpecTab:CreateToggle({Name = "Spectate Player", CurrentValue = false, Callback = function(Value)
+      if Value then
+          local target = FindPlayer(Settings.TargetSpectate)
+          if target and target.Character then Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid") end
+      else
+          Camera.CameraSubject = player.Character:FindFirstChildOfClass("Humanoid")
+      end
+end})
+
+-- [ TAB PROTECTION ]
+local ProtTab = Window:CreateTab("Protection 🔐", 4483362458)
+ProtTab:CreateToggle({Name = "Anti-Lag", CurrentValue = false, Callback = function(V)
+      Settings.AntiLag = V
+      if V then
+         settings().Rendering.QualityLevel = 1
+         for _, v in pairs(game:GetDescendants()) do if v:IsA("PostProcessEffect") or v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end end
+      end
+end})
+
+-- [ TAB TROLLING ]
+local TrollTab = Window:CreateTab("Trolling 🌀", 4483362458)
+TrollTab:CreateToggle({Name = "Spin Character", CurrentValue = false, Callback = function(V) Settings.SpinChar = V end})
+TrollTab:CreateSlider({Name = "Spin Speed", Range = {10, 300}, Increment = 10, CurrentValue = 50, Callback = function(V) Settings.SpinSpeed = V end})
+TrollTab:CreateButton({Name = "Load Infinite Yield", Callback = function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))() end})
+
+-- [ SETTINGS ]
+local SetTab = Window:CreateTab("Settings ⚙️", 4483362458)
+SetTab:CreateButton({Name = "Delete GUI", Callback = function() Settings.ESP = false FOVCircle:Remove() Rayfield:Destroy() end})
+
+-- [ CORE LOOP ]
+RS.RenderStepped:Connect(function()
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+    
+    -- ESP Logic
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= player and v.Character then
+            local highlight = v.Character:FindFirstChild("PinzzHighlight")
+            if Settings.ESP then
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.Name = "PinzzHighlight"
+                    highlight.Parent = v.Character
+                end
+                highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                highlight.FillTransparency = 0.5
+            else
+                if highlight then highlight:Destroy() end
+            end
+        end
+    end
+
+    -- Aimlock Logic (FIXED)
+    if Settings.Aimlock then
+        local target = GetClosestPlayer()
+        if target and target.Character and target.Character:FindFirstChild(Settings.TargetPart) then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character[Settings.TargetPart].Position)
+        end
+    end
+
+    -- Spin Logic
+    if Settings.SpinChar and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(Settings.SpinSpeed), 0)
+    end
+end)
+
+task.spawn(function()
+    local lastJump = tick()
+    while task.wait(0.1) do
+        if Settings.AntiAFK then VirtualUser:CaptureController(); VirtualUser:ClickButton2(Vector2.new()) end
+        if Settings.AutoJump and (tick()-lastJump) >= Settings.JumpInterval then
+            if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then 
+                player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(3) 
+                lastJump = tick() 
+            end
+        end
+    end
+end)
+
+Rayfield:Notify({Title = "script by pinzz", Content = "Target System Fixed! 😈"})
