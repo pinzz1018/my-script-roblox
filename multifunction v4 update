@@ -1,0 +1,265 @@
+--[[
+    script by pinzz | Multifunctional V5.0 (WALL-CHECK UPDATE) 😈
+    - Note: masih v4
+    - Key: thekingpinzz
+    - Fitur: Anti-AFK, Anti-Lag, Anti-Ban, Spin, TP, Spectate, AIMLOCK (VISIBLE ONLY), FOV, ESP, TRACERS (TOP), NAMETAGS, FLY GUI
+]]
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "script by pinzz | V8 😈",
+   LoadingTitle = "King's Security V8...",
+   LoadingSubtitle = "by Alfin's Assistant X",
+   ConfigurationSaving = { Enabled = false },
+   KeySystem = true,
+   KeySettings = {
+      Title = "Strict Security Verification",
+      Subtitle = "Authentication Required",
+      Note = "masih v4", 
+      FileName = "PinzzV8",
+      SaveKey = false, 
+      GrabKeyFromSite = false,
+      Key = {"thekingpinzz"} 
+   }
+})
+
+-- [ SERVICES & VARIABLES ]
+local player = game.Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local RS = game:GetService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
+
+local Settings = {
+    Flying = false,
+    FlySpeed = 50,
+    Aimlock = false,
+    ESP = false, 
+    FOV = 100,
+    TargetPart = "Head",
+    AntiAFK = false,
+    AutoJump = false,
+    AutoReconnect = false,
+    JumpInterval = 30,
+    AntiLag = false,
+    AntiBan = true,
+    SpinChar = false,
+    SpinSpeed = 50,
+    TargetTeleport = "",
+    TargetSpectate = ""
+}
+
+-- [ FOV CIRCLE ]
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Visible = false; FOVCircle.Color = Color3.fromRGB(255, 0, 0); FOVCircle.Thickness = 1.5; FOVCircle.Transparency = 1; FOVCircle.Filled = false; FOVCircle.Radius = Settings.FOV
+
+-- [ VISUAL STORAGE ]
+local Tracers = {}
+local NameTags = {}
+
+-- [ FUNCTIONS ]
+local function FindPlayer(Name)
+    if Name == "" then return nil end
+    Name = string.lower(Name)
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= player and (string.find(string.lower(v.Name), Name) or string.find(string.lower(v.DisplayName), Name)) then return v end
+    end
+    return nil
+end
+
+-- [ WALL CHECK FUNCTION ]
+local function IsVisible(TargetPart)
+    local Character = player.Character
+    if not Character then return false end
+    
+    local RayParams = RaycastParams.new()
+    RayParams.FilterType = Enum.RaycastFilterType.Exclude
+    RayParams.FilterDescendantsInstances = {Character, Camera}
+    RayParams.IgnoreWater = true
+    
+    local Direction = (TargetPart.Position - Camera.CFrame.Position).Unit * (TargetPart.Position - Camera.CFrame.Position).Magnitude
+    local RayResult = workspace:Raycast(Camera.CFrame.Position, Direction, RayParams)
+    
+    if RayResult then
+        return RayResult.Instance:IsDescendantOf(TargetPart.Parent)
+    end
+    return false
+end
+
+local function GetClosestPlayer()
+    local Target = nil
+    local Dist = Settings.FOV
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= player and v.Character and v.Character:FindFirstChild(Settings.TargetPart) then
+            local hum = v.Character:FindFirstChildOfClass("Humanoid")
+            if hum and hum.Health > 0 then
+                local Part = v.Character[Settings.TargetPart]
+                local ScreenPos, OnScreen = Camera:WorldToViewportPoint(Part.Position)
+                if OnScreen then
+                    -- BUG FIX: Tambahkan pengecekan tembok (IsVisible)
+                    if IsVisible(Part) then
+                        local MouseDist = (Vector2.new(ScreenPos.X, ScreenPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                        if MouseDist < Dist then Target = v; Dist = MouseDist end
+                    end
+                end
+            end
+        end
+    end
+    return Target
+end
+
+-- [ FLY LOGIC ]
+local function ToggleFly(v)
+    Settings.Flying = v
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if Settings.Flying then
+        local bv = Instance.new("BodyVelocity"); local bg = Instance.new("BodyGyro")
+        bv.Name = "PinzzFlyBV"; bv.Parent = char.HumanoidRootPart; bv.MaxForce = Vector3.new(9e9, 9e9, 9e9); bv.Velocity = Vector3.new(0, 0, 0)
+        bg.Name = "PinzzFlyBG"; bg.Parent = char.HumanoidRootPart; bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9); bg.P = 9e4
+        hum.PlatformStand = true
+        task.spawn(function()
+            while Settings.Flying and char:FindFirstChild("HumanoidRootPart") do
+                RS.RenderStepped:Wait(); bg.CFrame = Camera.CFrame
+                if hum.MoveDirection.Magnitude > 0 then
+                    local flyDir = Camera.CFrame:VectorToWorldSpace(Vector3.new(hum.MoveDirection.X, 0, hum.MoveDirection.Z))
+                    bv.Velocity = flyDir * Settings.FlySpeed
+                else bv.Velocity = Vector3.new(0, 0.1, 0) end
+            end
+            if bv then bv:Destroy() end; if bg then bg:Destroy() end; hum.PlatformStand = false
+        end)
+    end
+end
+
+-- [ FLY GUI MANDIRI ]
+local function CreateFlyGUI()
+    if game.CoreGui:FindFirstChild("FlyByPinzz") then return end
+    local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = "FlyByPinzz"; ScreenGui.Parent = game.CoreGui
+    local MainFrame = Instance.new("Frame"); MainFrame.BackgroundColor3 = Color3.fromRGB(220, 220, 220); MainFrame.BackgroundTransparency = 0.35; MainFrame.Size = UDim2.new(0, 180, 0, 130); MainFrame.Position = UDim2.new(0.1, 0, 0.4, 0); MainFrame.Active = true; MainFrame.Draggable = true; MainFrame.Parent = ScreenGui
+    local UIStroke = Instance.new("UIStroke"); UIStroke.Color = Color3.fromRGB(120, 120, 120); UIStroke.Thickness = 2; UIStroke.Parent = MainFrame
+    local Corner = Instance.new("UICorner"); Corner.CornerRadius = UDim.new(0, 15); Corner.Parent = MainFrame
+    local Title = Instance.new("TextLabel"); Title.Text = "Made by pinzz"; Title.Size = UDim2.new(1, 0, 0.3, 0); Title.BackgroundTransparency = 1; Title.Parent = MainFrame
+    local ToggleBtn = Instance.new("TextButton"); ToggleBtn.Text = "FLY: OFF"; ToggleBtn.Size = UDim2.new(0.8, 0, 0.25, 0); ToggleBtn.Position = UDim2.new(0.1, 0, 0.35, 0); ToggleBtn.Parent = MainFrame
+    local SpeedInput = Instance.new("TextBox"); SpeedInput.PlaceholderText = "Speed..."; SpeedInput.Size = UDim2.new(0.8, 0, 0.2, 0); SpeedInput.Position = UDim2.new(0.1, 0, 0.65, 0); SpeedInput.Parent = MainFrame
+    local MinBtn = Instance.new("TextButton"); MinBtn.Text = "-"; MinBtn.Size = UDim2.new(0, 25, 0, 25); MinBtn.Position = UDim2.new(0.82, 0, 0.05, 0); MinBtn.Parent = MainFrame
+    ToggleBtn.MouseButton1Click:Connect(function()
+        if not Settings.Flying then ToggleFly(true); ToggleBtn.Text = "FLY: ON"; ToggleBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 80)
+        else ToggleFly(false); ToggleBtn.Text = "FLY: OFF"; ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 80, 80) end
+    end)
+    SpeedInput.FocusLost:Connect(function() Settings.FlySpeed = tonumber(SpeedInput.Text) or 50 end)
+    local min = false; MinBtn.MouseButton1Click:Connect(function()
+        min = not min; MainFrame:TweenSize(min and UDim2.new(0, 180, 0, 35) or UDim2.new(0, 180, 0, 130), "Out", "Quad", 0.3, true)
+        ToggleBtn.Visible = not min; SpeedInput.Visible = not min; MinBtn.Text = min and "+" or "-"
+    end)
+end
+
+-- [ TABS ]
+local AimTab = Window:CreateTab("Aimlock 🎯", 4483362458)
+AimTab:CreateToggle({Name = "Enable Aimlock", CurrentValue = false, Callback = function(V) Settings.Aimlock = V FOVCircle.Visible = V end})
+AimTab:CreateToggle({Name = "Enable ESP (Wallhack/Tracer/Tag)", CurrentValue = false, Callback = function(V) Settings.ESP = V end})
+AimTab:CreateSlider({Name = "FOV Radius", Range = {50, 500}, Increment = 10, CurrentValue = 100, Callback = function(V) Settings.FOV = V FOVCircle.Radius = V end})
+AimTab:CreateDropdown({Name = "Target Aim", Options = {"Kepala", "Badan"}, CurrentOption = "Kepala", Callback = function(V) if V == "Kepala" then Settings.TargetPart = "Head" else Settings.TargetPart = "HumanoidRootPart" end end})
+
+local MainTab = Window:CreateTab("Main 🛡️", 4483362458)
+MainTab:CreateToggle({Name = "Enable Anti-AFK", CurrentValue = false, Callback = function(V) Settings.AntiAFK = V end})
+MainTab:CreateToggle({Name = "Anti-AFK Version Jump", CurrentValue = false, Callback = function(V) Settings.AutoJump = V end})
+MainTab:CreateSlider({Name = "Jump Interval (Sec)", Range = {5, 120}, Increment = 1, CurrentValue = 30, Callback = function(V) Settings.JumpInterval = V end})
+
+local FlyTab = Window:CreateTab("Fly Menu ✈️", 4483362458)
+FlyTab:CreateButton({Name = "Execute Fly GUI Mandiri", Callback = function() CreateFlyGUI() end})
+
+local TPTab = Window:CreateTab("Teleport 🚀", 4483362458)
+TPTab:CreateInput({Name = "Input Nama", PlaceholderText = "...", Callback = function(V) Settings.TargetTeleport = V end})
+TPTab:CreateButton({Name = "Teleport Sekarang", Callback = function() local target = FindPlayer(Settings.TargetTeleport) if target and target.Character then player.Character:PivotTo(target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)) end end})
+
+local SpecTab = Window:CreateTab("Spectate 👁️", 4483362458)
+SpecTab:CreateInput({Name = "Input Nama", PlaceholderText = "...", Callback = function(V) Settings.TargetSpectate = V end})
+SpecTab:CreateToggle({Name = "Spectate Player", CurrentValue = false, Callback = function(Value) if Value then local target = FindPlayer(Settings.TargetSpectate) if target and target.Character then Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid") end else Camera.CameraSubject = player.Character:FindFirstChildOfClass("Humanoid") end end})
+
+local ProtTab = Window:CreateTab("Protection 🔐", 4483362458)
+ProtTab:CreateToggle({Name = "Enable Anti-Ban", CurrentValue = true, Callback = function(V) Settings.AntiBan = V end})
+ProtTab:CreateToggle({Name = "Anti-Lag", CurrentValue = false, Callback = function(V) Settings.AntiLag = V if V then settings().Rendering.QualityLevel = 1 for _, v in pairs(game:GetDescendants()) do if v:IsA("PostProcessEffect") or v:IsA("ParticleEmitter") or v:IsA("Trail") then v.Enabled = false end end end end})
+
+local TrollTab = Window:CreateTab("Trolling 🌀", 4483362458)
+TrollTab:CreateToggle({Name = "Spin Character", CurrentValue = false, Callback = function(V) Settings.SpinChar = V end})
+TrollTab:CreateSlider({Name = "Spin Speed", Range = {10, 300}, Increment = 10, CurrentValue = 50, Callback = function(V) Settings.SpinSpeed = V end})
+
+local SetTab = Window:CreateTab("Settings ⚙️", 4483362458)
+SetTab:CreateButton({Name = "Delete GUI", Callback = function() Settings.ESP = false FOVCircle:Remove() for _,v in pairs(Tracers) do v:Remove() end for _,v in pairs(NameTags) do v:Remove() end Rayfield:Destroy() end})
+
+-- [ VISUAL CORE ]
+local function CreateVisuals(p)
+    local tracer = Drawing.new("Line"); tracer.Visible = false; tracer.Color = Color3.fromRGB(255, 0, 0); tracer.Thickness = 1; tracer.Transparency = 1
+    local tag = Drawing.new("Text"); tag.Visible = false; tag.Color = Color3.fromRGB(255, 255, 255); tag.Size = 14; tag.Center = true; tag.Outline = true
+    Tracers[p] = tracer; NameTags[p] = tag
+end
+
+game.Players.PlayerAdded:Connect(CreateVisuals)
+for _, v in pairs(game.Players:GetPlayers()) do if v ~= player then CreateVisuals(v) end end
+game.Players.PlayerRemoving:Connect(function(p) if Tracers[p] then Tracers[p]:Remove(); Tracers[p] = nil end if NameTags[p] then NameTags[p]:Remove(); NameTags[p] = nil end end)
+
+-- [ CORE LOOP ]
+RS.RenderStepped:Connect(function()
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+    
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= player then
+            local char = v.Character
+            local tracer = Tracers[v]
+            local tag = NameTags[v]
+            
+            if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChildOfClass("Humanoid") and Settings.ESP then
+                local hrp = char.HumanoidRootPart
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                local ScreenPos, OnScreen = Camera:WorldToViewportPoint(hrp.Position)
+                
+                -- Highlight logic
+                local highlight = char:FindFirstChild("PinzzHighlight")
+                if not highlight then highlight = Instance.new("Highlight"); highlight.Name = "PinzzHighlight"; highlight.Parent = char end
+                highlight.Enabled = true; highlight.FillColor = Color3.fromRGB(255, 0, 0); highlight.FillTransparency = 0.5
+                
+                if OnScreen then
+                    -- Tracer Logic (TOP)
+                    if tracer then
+                        tracer.From = Vector2.new(Camera.ViewportSize.X / 2, 0)
+                        tracer.To = Vector2.new(ScreenPos.X, ScreenPos.Y)
+                        tracer.Visible = true
+                    end
+                    -- Nametag Logic
+                    if tag then
+                        local dist = math.floor((player.Character.HumanoidRootPart.Position - hrp.Position).Magnitude)
+                        tag.Position = Vector2.new(ScreenPos.X, ScreenPos.Y - 40)
+                        tag.Text = string.format("%s\n[%d HP] - %d m", v.DisplayName, hum.Health, dist)
+                        tag.Visible = true
+                    end
+                else
+                    if tracer then tracer.Visible = false end
+                    if tag then tag.Visible = false end
+                end
+            else
+                if tracer then tracer.Visible = false end
+                if tag then tag.Visible = false end
+                if char and char:FindFirstChild("PinzzHighlight") then char.PinzzHighlight.Enabled = false end
+            end
+        end
+    end
+
+    if Settings.Aimlock then
+        local target = GetClosestPlayer()
+        if target and target.Character and target.Character:FindFirstChild(Settings.TargetPart) then 
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character[Settings.TargetPart].Position) 
+        end
+    end
+    if Settings.SpinChar and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then 
+        player.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(Settings.SpinSpeed), 0) 
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if Settings.AntiAFK then VirtualUser:CaptureController(); VirtualUser:ClickButton2(Vector2.new()) end
+    end
+end)
+
+Rayfield:Notify({Title = "script by pinzz", Content = "V5.0: Aimlock Wall-Check Fixed! 😈🎯"})
