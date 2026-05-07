@@ -1,0 +1,407 @@
+--// ULTRA HD SHADER HUB
+--// Script by Pinzz
+--// KEY : pinzking
+
+pcall(function()
+	game.CoreGui.UltraShaderHub:Destroy()
+end)
+
+local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+local Terrain = workspace:FindFirstChildOfClass("Terrain")
+
+--==================================================
+-- GUI
+--==================================================
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "UltraShaderHub"
+gui.Parent = game.CoreGui
+gui.ResetOnSpawn = false
+
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0,390,0,260)
+main.Position = UDim2.new(0.5,-195,0.14,0)
+main.BackgroundColor3 = Color3.fromRGB(12,12,12)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+main.Parent = gui
+
+Instance.new("UICorner",main).CornerRadius = UDim.new(0,24)
+
+local stroke = Instance.new("UIStroke")
+stroke.Parent = main
+stroke.Color = Color3.fromRGB(0,200,255)
+stroke.Thickness = 1.6
+
+--==================================================
+-- LEFT PANEL
+--==================================================
+
+local left = Instance.new("Frame")
+left.Size = UDim2.new(0,120,1,0)
+left.BackgroundColor3 = Color3.fromRGB(17,17,17)
+left.BorderSizePixel = 0
+left.Parent = main
+
+Instance.new("UICorner",left).CornerRadius = UDim.new(0,24)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,65)
+title.BackgroundTransparency = 1
+title.Text = "SHADER"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 25
+title.TextColor3 = Color3.fromRGB(0,200,255)
+title.Parent = left
+
+local credit = Instance.new("TextLabel")
+credit.Size = UDim2.new(1,0,0,20)
+credit.Position = UDim2.new(0,0,0,52)
+credit.BackgroundTransparency = 1
+credit.Text = "by Pinzz"
+credit.Font = Enum.Font.Gotham
+credit.TextSize = 13
+credit.TextColor3 = Color3.fromRGB(180,180,180)
+credit.Parent = left
+
+--==================================================
+-- MINIMIZE
+--==================================================
+
+local mini = Instance.new("TextButton")
+mini.Size = UDim2.new(0,28,0,28)
+mini.Position = UDim2.new(1,-38,0,8)
+mini.BackgroundColor3 = Color3.fromRGB(24,24,24)
+mini.Text = "-"
+mini.TextColor3 = Color3.new(1,1,1)
+mini.Font = Enum.Font.GothamBold
+mini.TextSize = 18
+mini.Parent = main
+
+Instance.new("UICorner",mini).CornerRadius = UDim.new(1,0)
+
+local minimized = false
+local openedSize = UDim2.new(0,390,0,430)
+
+--==================================================
+-- KEY SYSTEM
+--==================================================
+
+local keyBox = Instance.new("TextBox")
+keyBox.Size = UDim2.new(0,225,0,42)
+keyBox.Position = UDim2.new(0,145,0,35)
+keyBox.PlaceholderText = "Enter Key..."
+keyBox.Text = ""
+keyBox.BackgroundColor3 = Color3.fromRGB(20,20,20)
+keyBox.TextColor3 = Color3.new(1,1,1)
+keyBox.Font = Enum.Font.Gotham
+keyBox.TextSize = 14
+keyBox.Parent = main
+
+Instance.new("UICorner",keyBox).CornerRadius = UDim.new(0,14)
+
+local unlock = Instance.new("TextButton")
+unlock.Size = UDim2.new(0,225,0,40)
+unlock.Position = UDim2.new(0,145,0,88)
+unlock.BackgroundColor3 = Color3.fromRGB(0,180,255)
+unlock.Text = "UNLOCK HUB"
+unlock.TextColor3 = Color3.new(1,1,1)
+unlock.Font = Enum.Font.GothamBold
+unlock.TextSize = 14
+unlock.Parent = main
+
+Instance.new("UICorner",unlock).CornerRadius = UDim.new(0,14)
+
+--==================================================
+-- CONTENT
+--==================================================
+
+local content = Instance.new("ScrollingFrame")
+content.Size = UDim2.new(0,235,0,305)
+content.Position = UDim2.new(0,142,0,72)
+content.CanvasSize = UDim2.new(0,0,0,700)
+content.ScrollBarThickness = 2
+content.BackgroundTransparency = 1
+content.Visible = false
+content.Parent = main
+
+--==================================================
+-- CLEAR SHADER
+--==================================================
+
+local function ClearShader()
+
+	for _,v in pairs(Lighting:GetChildren()) do
+		if v.Name == "PinzzFX" then
+			v:Destroy()
+		end
+	end
+end
+
+--==================================================
+-- BUTTON CREATOR
+--==================================================
+
+local y = 0
+
+local function AddButton(text,color,callback)
+
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(0.94,0,0,40)
+	b.Position = UDim2.new(0.03,0,0,y)
+	b.BackgroundColor3 = color
+	b.Text = text
+	b.TextColor3 = Color3.new(1,1,1)
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 13
+	b.Parent = content
+
+	Instance.new("UICorner",b).CornerRadius = UDim.new(0,13)
+
+	b.MouseButton1Click:Connect(callback)
+
+	y += 48
+end
+
+--==================================================
+-- ULTRA REALISTIC
+--==================================================
+
+AddButton("🎥 Ultra Realistic",Color3.fromRGB(80,255,170),function()
+
+	ClearShader()
+
+	local cc = Instance.new("ColorCorrectionEffect")
+	cc.Name = "PinzzFX"
+	cc.Parent = Lighting
+	cc.Brightness = 0.04
+	cc.Contrast = 0.22
+	cc.Saturation = 0.08
+	cc.TintColor = Color3.fromRGB(255,245,230)
+
+	local bloom = Instance.new("BloomEffect")
+	bloom.Name = "PinzzFX"
+	bloom.Parent = Lighting
+	bloom.Intensity = 0.18
+	bloom.Size = 38
+	bloom.Threshold = 0.82
+
+	local sun = Instance.new("SunRaysEffect")
+	sun.Name = "PinzzFX"
+	sun.Parent = Lighting
+	sun.Intensity = 0.06
+	sun.Spread = 0.75
+
+	local atmo = Instance.new("Atmosphere")
+	atmo.Name = "PinzzFX"
+	atmo.Parent = Lighting
+	atmo.Density = 0.28
+	atmo.Offset = 0.03
+	atmo.Color = Color3.fromRGB(199,199,199)
+	atmo.Decay = Color3.fromRGB(90,100,120)
+	atmo.Glare = 0.15
+	atmo.Haze = 0.9
+
+	Lighting.GlobalShadows = true
+	Lighting.Brightness = 2.4
+	Lighting.ClockTime = 14.5
+	Lighting.EnvironmentDiffuseScale = 1
+	Lighting.EnvironmentSpecularScale = 1
+	Lighting.ShadowSoftness = 0.15
+
+	if Terrain then
+		Terrain.WaterWaveSize = 0.2
+		Terrain.WaterWaveSpeed = 10
+		Terrain.WaterReflectance = 0.85
+		Terrain.WaterTransparency = 0.2
+	end
+
+end)
+
+--==================================================
+-- SUNSET
+--==================================================
+
+AddButton("🌅 Sunset",Color3.fromRGB(255,130,80),function()
+
+	ClearShader()
+
+	local cc = Instance.new("ColorCorrectionEffect")
+	cc.Name = "PinzzFX"
+	cc.Parent = Lighting
+	cc.Brightness = 0.11
+	cc.Contrast = 0.15
+	cc.Saturation = 0.18
+	cc.TintColor = Color3.fromRGB(255,200,140)
+
+	local bloom = Instance.new("BloomEffect")
+	bloom.Name = "PinzzFX"
+	bloom.Parent = Lighting
+	bloom.Intensity = 0.22
+	bloom.Size = 38
+	bloom.Threshold = 0.9
+
+	local sun = Instance.new("SunRaysEffect")
+	sun.Name = "PinzzFX"
+	sun.Parent = Lighting
+	sun.Intensity = 0.12
+	sun.Spread = 0.85
+
+	local atmo = Instance.new("Atmosphere")
+	atmo.Name = "PinzzFX"
+	atmo.Parent = Lighting
+	atmo.Density = 0.26
+	atmo.Offset = 0.04
+	atmo.Color = Color3.fromRGB(255,180,120)
+	atmo.Decay = Color3.fromRGB(255,145,90)
+	atmo.Glare = 0.3
+	atmo.Haze = 0.8
+
+	Lighting.ClockTime = 17.1
+	Lighting.Brightness = 3
+	Lighting.GlobalShadows = true
+	Lighting.EnvironmentDiffuseScale = 1
+	Lighting.EnvironmentSpecularScale = 1
+	Lighting.ShadowSoftness = 0.12
+
+	Lighting.OutdoorAmbient = Color3.fromRGB(190,145,110)
+	Lighting.Ambient = Color3.fromRGB(150,110,85)
+
+end)
+
+--==================================================
+-- RAIN SHADER
+--==================================================
+
+AddButton("🌧️ Rain",Color3.fromRGB(90,120,255),function()
+
+	ClearShader()
+
+	local cc = Instance.new("ColorCorrectionEffect")
+	cc.Name = "PinzzFX"
+	cc.Parent = Lighting
+	cc.Brightness = -0.02
+	cc.Contrast = 0.12
+	cc.Saturation = -0.08
+	cc.TintColor = Color3.fromRGB(180,190,210)
+
+	local bloom = Instance.new("BloomEffect")
+	bloom.Name = "PinzzFX"
+	bloom.Parent = Lighting
+	bloom.Intensity = 0.08
+	bloom.Size = 24
+	bloom.Threshold = 1
+
+	local sun = Instance.new("SunRaysEffect")
+	sun.Name = "PinzzFX"
+	sun.Parent = Lighting
+	sun.Intensity = 0.015
+	sun.Spread = 0.5
+
+	local atmo = Instance.new("Atmosphere")
+	atmo.Name = "PinzzFX"
+	atmo.Parent = Lighting
+	atmo.Density = 0.45
+	atmo.Offset = 0
+	atmo.Color = Color3.fromRGB(170,180,200)
+	atmo.Decay = Color3.fromRGB(70,80,100)
+	atmo.Glare = 0
+	atmo.Haze = 2
+
+	Lighting.ClockTime = 15
+	Lighting.Brightness = 1.8
+	Lighting.GlobalShadows = true
+	Lighting.EnvironmentDiffuseScale = 0.9
+	Lighting.EnvironmentSpecularScale = 0.9
+	Lighting.ShadowSoftness = 0.25
+
+	Lighting.Ambient = Color3.fromRGB(80,80,90)
+	Lighting.OutdoorAmbient = Color3.fromRGB(100,100,110)
+
+	if Terrain then
+		Terrain.WaterWaveSize = 0.35
+		Terrain.WaterWaveSpeed = 18
+		Terrain.WaterReflectance = 0.95
+		Terrain.WaterTransparency = 0.12
+	end
+
+end)
+--==================================================
+-- REMOVE SHADER
+--==================================================
+
+AddButton("❌ Remove Shader",Color3.fromRGB(170,60,60),function()
+
+	ClearShader()
+
+end)
+
+--==================================================
+-- KEY CHECK
+--==================================================
+
+unlock.MouseButton1Click:Connect(function()
+
+	if string.lower(keyBox.Text) == "pinzking" then
+
+		content.Visible = true
+
+		keyBox.Visible = false
+		unlock.Visible = false
+
+		TweenService:Create(
+			main,
+			TweenInfo.new(0.25),
+			{Size = openedSize}
+		):Play()
+
+	else
+
+		unlock.Text = "WRONG KEY"
+
+		task.wait(1)
+
+		unlock.Text = "UNLOCK HUB"
+	end
+end)
+
+--==================================================
+-- MINIMIZE
+--==================================================
+
+mini.MouseButton1Click:Connect(function()
+
+	minimized = not minimized
+
+	if minimized then
+
+		content.Visible = false
+		credit.Visible = false
+
+		TweenService:Create(
+			main,
+			TweenInfo.new(0.2),
+			{Size = UDim2.new(0,390,0,45)}
+		):Play()
+
+		mini.Text = "+"
+
+	else
+
+		if not keyBox.Visible then
+			content.Visible = true
+		end
+
+		credit.Visible = true
+
+		TweenService:Create(
+			main,
+			TweenInfo.new(0.2),
+			{Size = openedSize}
+		):Play()
+
+		mini.Text = "-"
+	end
+end)
