@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-NEXUS SYSTEM 😈</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00ff00;
+            --bg-dark: #050505;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+        body {
+            background: radial-gradient(circle at center, #001a00 0%, #000 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            padding: 20px 0;
+        }
+
+        /* --- UI MAIN CONTAINER --- */
+        .main-container {
+            width: 90%;
+            max-width: 420px;
+            padding: 40px 20px;
+            text-align: center;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        .profile-section img {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 20px var(--primary);
+            margin-bottom: 15px;
+            object-fit: cover;
+        }
+
+        .profile-section h1 { font-size: 24px; letter-spacing: 2px; color: var(--primary); text-shadow: 0 0 10px var(--primary); margin-bottom: 5px; }
+        .profile-section p { font-size: 13px; color: #aaa; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* --- LINK BUTTONS --- */
+        .links-wrapper { display: flex; flex-direction: column; gap: 12px; }
+
+        .btn-link {
+            padding: 16px;
+            border-radius: 12px;
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 15px;
+        }
+
+        .btn-link i { color: var(--primary); font-size: 18px; }
+
+        .btn-link:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary);
+            transform: translateY(-3px);
+            border-color: var(--primary);
+        }
+        .btn-link:hover i { color: #000; }
+
+        /* --- MODAL SYSTEM --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none; justify-content: center; align-items: center;
+            z-index: 100; padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            background: #0a0a0a;
+            border: 1px solid var(--primary);
+            border-radius: 20px;
+            width: 100%; max-width: 380px;
+            position: relative; padding: 25px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.1);
+        }
+
+        .close-modal {
+            position: absolute; top: 15px; right: 20px;
+            color: var(--primary); font-size: 28px; cursor: pointer;
+        }
+
+        /* --- SNAKE GAME --- */
+        #gameCanvas { background: #000; border: 1px solid #222; margin-top: 15px; border-radius: 10px; width: 100%; max-width: 300px; }
+        .game-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 20px; width: 180px; margin-left: auto; margin-right: auto; }
+        .ctrl-btn { padding: 12px; background: #111; border: 1px solid #333; color: var(--primary); border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .ctrl-btn:active { background: var(--primary); color: #000; }
+
+        /* --- MUSIC PLAYER --- */
+        .album-art { width: 120px; height: 120px; background: #111; margin: 0 auto 15px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 0 15px var(--primary); }
+        .album-art i { font-size: 50px; color: var(--primary); }
+        .lyrics-box {
+            height: 180px; overflow-y: auto;
+            margin-top: 20px; padding: 15px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px; font-size: 14px;
+            line-height: 2; color: #bbb;
+            scrollbar-width: none; /* Firefox */
+        }
+        .lyrics-box::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        .lyric-line { margin-bottom: 10px; transition: 0.3s; }
+        .active-lyric { color: var(--primary); font-weight: bold; transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="profile-section">
+            <img src="https://via.placeholder.com/150" alt="Alfin Profile">
+            <h1>ALFIN - X 😈</h1>
+            <p>[ Access Level: Admin ]</p>
+        </div>
+
+        <div class="links-wrapper">
+            <button class="btn-link" onclick="openModal('gameModal')">
+                <i class="fas fa-gamepad"></i> PLAY X-SNAKE
+            </button>
+            <button class="btn-link" onclick="openModal('musicModal')">
+                <i class="fas fa-play-circle"></i> FAVORITE MUSIC
+            </button>
+            <a href="https://instagram.com" class="btn-link" target="_blank">
+                <i class="fab fa-instagram"></i> INSTAGRAM
+            </a>
+            <a href="https://github.com" class="btn-link" target="_blank">
+                <i class="fab fa-github"></i> MY REPOSITORY
+            </a>
+            <a href="#" class="btn-link">
+                <i class="fas fa-envelope"></i> CONTACT ME
+            </a>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 10px; color: #555; letter-spacing: 2px;">
+            POWERED BY X-NEXUS SYSTEM 😈
+        </div>
+    </div>
+
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('gameModal')">&times;</span>
+            <h3 style="color: var(--primary); margin-bottom: 5px;">SNAKE PROTOCOL</h3>
+            <canvas id="gameCanvas" width="300" height="300"></canvas>
+            <div class="game-controls">
+                <div></div><button class="ctrl-btn" onclick="changeDir('UP')"><i class="fas fa-chevron-up"></i></button><div></div>
+                <button class="ctrl-btn" onclick="changeDir('LEFT')"><i class="fas fa-chevron-left"></i></button>
+                <button class="ctrl-btn" onclick="changeDir('DOWN')"><i class="fas fa-chevron-down"></i></button>
+                <button class="ctrl-btn" onclick="changeDir('RIGHT')"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <p id="scoreDisplay" style="margin-top: 15px; color: #fff;">Score: <span style="color:var(--primary)">0</span></p>
+        </div>
+    </div>
+
+    <div id="musicModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('musicModal')">&times;</span>
+            <div class="album-art"><i class="fas fa-compact-disc fa-spin"></i></div>
+            <h3 style="margin-bottom: 5px;">Play Date</h3>
+            <p style="font-size: 12px; color: var(--primary); margin-bottom: 10px;">Melanie Martinez</p>
+            
+            <div class="lyrics-box" id="lyricsContainer">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- MODAL ENGINE ---
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+            if(id === 'gameModal') startSnake();
+            if(id === 'musicModal') showLyrics();
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+            if(id === 'gameModal') stopSnake();
+        }
+
+        // --- SNAKE ENGINE ---
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        let box = 20; let snake; let food; let d; let gameLoop; let score;
+
+        function startSnake() {
+            snake = [{x: 8 * box, y: 8 * box}];
+            score = 0; d = "RIGHT";
+            food = { x: Math.floor(Math.random()*14+1)*box, y: Math.floor(Math.random()*14+1)*box };
+            document.getElementById('scoreDisplay').innerHTML = `Score: <span style="color:var(--primary)">0</span>`;
+            if(gameLoop) clearInterval(gameLoop);
+            gameLoop = setInterval(drawSnake, 120);
+        }
+
+        function stopSnake() { clearInterval(gameLoop); }
+        function changeDir(dir) { 
+            if(dir == "LEFT" && d != "RIGHT") d = "LEFT";
+            else if(dir == "UP" && d != "DOWN") d = "UP";
+            else if(dir == "RIGHT" && d != "LEFT") d = "RIGHT";
+            else if(dir == "DOWN" && d != "UP") d = "DOWN";
+        }
+
+        function drawSnake() {
+            ctx.fillStyle = "#000"; ctx.fillRect(0,0,300,300);
+            for(let i=0; i<snake.length; i++){
+                ctx.fillStyle = (i==0) ? "#00ff00" : "#004400";
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                ctx.strokeStyle = "#000"; ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+            }
+            ctx.fillStyle = "red"; ctx.fillRect(food.x, food.y, box, box);
+            let snakeX = snake[0].x; let snakeY = snake[0].y;
+            if(d == "LEFT") snakeX -= box; if(d == "UP") snakeY -= box;
+            if(d == "RIGHT") snakeX += box; if(d == "DOWN") snakeY += box;
+
+            if(snakeX == food.x && snakeY == food.y){
+                score++;
+                document.getElementById('scoreDisplay').innerHTML = `Score: <span style="color:var(--primary)">${score}</span>`;
+                food = { x: Math.floor(Math.random()*14+1)*box, y: Math.floor(Math.random()*14+1)*box };
+            } else { snake.pop(); }
+
+            let newHead = {x: snakeX, y: snakeY};
+            if(snakeX < 0 || snakeY < 0 || snakeX >= 300 || snakeY >= 300 || collision(newHead, snake)){
+                clearInterval(gameLoop);
+                alert("GAME OVER! SCORE: " + score);
+                startSnake();
+            }
+            snake.unshift(newHead);
+        }
+        function collision(head, array){ for(let i=0; i<array.length; i++){ if(head.x == array[i].x && head.y == array[i].y) return true; } return false; }
+
+        // --- LYRICS DATA ---
+        const lyrics = [
+            "You call me on the telephone", "You feel so far away", "I don't give a f**k about you anyway",
+            "Whoever said I gave a f**k about you?", "You're the one who said that I'm your best friend",
+            "I'm the one who said that I'm your best friend too", "I'm tired of being your play date",
+            "Growing up means leaving you behind", "Wait, I think I'm starting to like this", "But I'm tired of being your play date"
+        ];
+
+        function showLyrics() {
+            const container = document.getElementById('lyricsContainer');
+            container.innerHTML = lyrics.map(line => `<div class="lyric-line">${line}</div>`).join('');
+        }
+    </script>
+</body>
+</html>
